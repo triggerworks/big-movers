@@ -16,8 +16,10 @@ Big Movers/
 ├── big_movers_result.csv        # 1,495 real big mover entries (2000–2026)
 ├── SPY Historical Data.csv      # SPY benchmark reference data
 ├── Start Big Movers.bat         # Desktop shortcut — starts server + opens browser
+├── requirements.txt             # pip dependencies (flask)
+├── vercel.json                  # Vercel deployment config
 ├── collected_stocks/            # 929 per-ticker OHLCV CSV files (source: GitHub repo)
-└── drawings/                    # Auto-created; per-symbol drawing annotations (JSON)
+└── drawings/                    # Auto-created locally; per-symbol drawing annotations (JSON)
 ```
 
 ### Frontend ↔ Backend Communication
@@ -108,13 +110,13 @@ year,symbol,gain_pct,low_date,high_date,low_price,high_price,avg_vol_b
 
 ### Drawing Tools
 
-| Key | Tool            | Behaviour                                              |
-|-----|-----------------|--------------------------------------------------------|
-| V   | Pan             | Default — drag to scroll the chart                     |
-| H   | H-Line          | Single click → yellow dashed horizontal price line     |
-| R   | Ray             | Two clicks → line from point 1, extending to the right |
-| S   | Segment         | Two clicks → fixed line between two points             |
-| Esc | Cancel          | Cancels a pending 2-point drawing mid-way              |
+| Key | Tool     | Behaviour                                              |
+|-----|----------|--------------------------------------------------------|
+| V   | Pan      | Default — drag to scroll the chart                     |
+| H   | H-Line   | Single click → yellow dashed horizontal price line     |
+| R   | Ray      | Two clicks → line from point 1, extending to the right |
+| S   | Segment  | Two clicks → fixed line between two points             |
+| Esc | Cancel   | Cancels a pending 2-point drawing mid-way              |
 
 - After placing any drawing the tool reverts to **Pan**
 - **Clear** button removes all drawings from the current chart
@@ -122,12 +124,36 @@ year,symbol,gain_pct,low_date,high_date,low_price,high_price,avg_vol_b
 
 ---
 
-## Known Bugs Fixed This Session
+## GitHub & Vercel Deployment
+
+- **Repo:** https://github.com/triggerworks/big-movers
+- **Deploy:** Connect the repo to Vercel; it picks up `vercel.json` automatically
+
+### Vercel notes
+- `vercel.json` uses `@vercel/python` runtime and `includeFiles` to bundle the HTML,
+  CSVs, and `collected_stocks/**` into the serverless function
+- Drawings use `/tmp/drawings` on Vercel (ephemeral — not persisted between requests);
+  local runs still use `drawings/` as normal
+- Detected via the `VERCEL` environment variable in `Big_movers_server.py`
+
+### To redeploy after local changes
+```bash
+git add -A
+git commit -m "your message"
+git push
+# Vercel auto-deploys from main
+```
+
+---
+
+## Known Bugs Fixed
 
 | Bug | Fix |
 |-----|-----|
 | EMA 20 / EMA 50 not rendering | `calcEMA` used `result.length` as loop guard (deadlock). Fixed to use index counter `i >= period - 1` |
 | Drawing tools did nothing | No click handler existed. Added `chart.subscribeClick()`, SVG overlay for segments/rays, and `candleSeries.createPriceLine()` for H-lines |
+| Vercel crash on startup | `os.makedirs("drawings/")` failed on read-only filesystem; fixed with `/tmp` fallback |
+| Vercel missing data files | `vercel.json` lacked `includeFiles`; HTML and all CSVs were not bundled into the function |
 
 ---
 
@@ -136,5 +162,5 @@ year,symbol,gain_pct,low_date,high_date,low_price,high_price,avg_vol_b
 - 929 tickers sourced from the reference GitHub repo (data back to 2000, includes delisted stocks)
 - 1,495 big mover entries across 2000–2026
 - `SPY Historical Data.csv` loaded for benchmark reference
-- `drawings/` is created automatically on first save
+- `drawings/` is created automatically on first local save
 - To add more tickers: drop `<TICKER>.csv` into `collected_stocks/` with columns `DateTime,Open,High,Low,Close,Volume`
