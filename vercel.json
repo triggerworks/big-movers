@@ -1,6 +1,17 @@
 {
   "builds": [
-    { "src": "Big_movers_server.py", "use": "@vercel/python" }
+    {
+      "src": "Big_movers_server.py",
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": [
+          "Big_movers.html",
+          "big_movers_result.csv",
+          "SPY Historical Data.csv",
+          "collected_stocks/**"
+        ]
+      }
+    }
   ],
   "routes": [
     { "src": "/(.*)", "dest": "Big_movers_server.py" }

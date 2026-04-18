@@ -5,16 +5,20 @@ from flask import Flask, jsonify, request, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STOCKS_DIR = os.path.join(BASE_DIR, "collected_stocks")
-DRAWINGS_DIR = os.path.join(BASE_DIR, "drawings")
 RESULTS_CSV = os.path.join(BASE_DIR, "big_movers_result.csv")
 SPY_CSV = os.path.join(BASE_DIR, "SPY Historical Data.csv")
 
+# Vercel's filesystem is read-only except /tmp; use /tmp for drawings there
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+DRAWINGS_DIR = "/tmp/drawings" if ON_VERCEL else os.path.join(BASE_DIR, "drawings")
+
 app = Flask(__name__, static_folder=BASE_DIR)
 
-# ── Ensure directories exist ──────────────────────────────────────────────────
+# ── Ensure writable directories exist ────────────────────────────────────────
 
-os.makedirs(STOCKS_DIR, exist_ok=True)
 os.makedirs(DRAWINGS_DIR, exist_ok=True)
+if not ON_VERCEL:
+    os.makedirs(STOCKS_DIR, exist_ok=True)
 
 
 # ── Helper: parse a CSV into a list of dicts ──────────────────────────────────
