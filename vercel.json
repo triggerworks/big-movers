@@ -1,0 +1,8 @@
+{
+  "builds": [
+    { "src": "Big_movers_server.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "Big_movers_server.py" }
+  ]
+}
